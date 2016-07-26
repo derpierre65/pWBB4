@@ -1,6 +1,11 @@
 # pWBB4
 pWBB4 erstellt eine Verbindung von SA:MP zum WBB4 und kann viele Funktionen ausführen.
 
+# Neue Funktionen?
+
+Du möchtest eine neue Funktion bei der Include haben?
+Erstelle eine neue Aufgabe und ich werde sie mir anschauen und eventuell in der nächsten Version implementieren.
+
 # Einfache Installation in 6 Schritten
 
 1. Verschiebe `install.php` auf dem Web Server vom WBB4 Forum (es muss nicht im selben Verzeichnis sein, wäre aber sinnvoll).
