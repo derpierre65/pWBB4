@@ -1,8 +1,7 @@
 <?php
-define('_SECURITY_KEY', '4004fdca193cda44691cf6f98300673d64123f32df16453e3f8d6b7b8c24111a');
-define('_CHECK_REMOTEADDR', '127.0.0.1');
+define('_VERSION',			'0.2');
 
-define('_VERSION',			'0.1');
+require('./samp.inc.php');
 
 use wcf\data\user\User;
 use wcf\data\user\UserAction;

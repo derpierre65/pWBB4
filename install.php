@@ -88,12 +88,7 @@
 									$_SESSION['pWBB4Install']['ip'] = $_POST['ip'];
 									$_SESSION['pWBB4Install']['wantip'] = isset($_POST['wantip']);
 									if ( is_dir($_SESSION['pWBB4Install']['dirname']) ) {
-										if ( !file_exists($dirname.'samp.php') || isset($_POST['overwrite']) ) {
-											return setStep(1);
-										} else {
-											echo 'Oops, da ist wohl schon pWBB4 installiert.';
-											$extra .= '<label><input type="checkbox" name="overwrite" value="1" /> &Uuml;berschreiben</label><br />';
-										}
+										return setStep(1);
 									}else{
 										echo 'Oops, das ist wohl kein Verzeichnis.';
 									}
@@ -113,7 +108,7 @@
 								if ( is_dir($_SESSION['pWBB4Install']['dirname']) ) {
 									if ( file_exists($_SESSION['pWBB4Install']['dirname'].'samp.php') ) {
 										if ( @!unlink($_SESSION['pWBB4Install']['dirname'].'samp.php') ) {
-											echo 'Oops, konnte samp.php nicht l&ouml;schen.';
+											echo 'Oops, samp.php konnte nicht gel&ouml;scht werden.';
 											return setStep(0);
 										}
 									}
@@ -121,14 +116,20 @@
 									if ( $h ) {
 										$get = @file_get_contents('https://raw.githubusercontent.com/derpierre65/pWBB4/master/samp.php');
 										if ( $get ) {
-											$config = "\r\n";
-											if ( !empty($_SESSION['pWBB4Install']['key']) ){
-												$config .= 'define(\'_SECURITY_KEY\', \''.$_SESSION['pWBB4Install']['key'].'\');'."\r\n";
+											$configFile = $_SESSION['pWBB4Install']['dirname'].'samp.inc.php';
+											if ( !file_exists($configFile) ) {
+												$ch = fopen($configFile, 'w+');
+												$config = "<?php";
+												if ( !empty($_SESSION['pWBB4Install']['key']) ) {
+													$config .= 'define(\'_SECURITY_KEY\', \''.$_SESSION['pWBB4Install']['key'].'\');'."\r\n";
+												}
+												if ( isset($_SESSION['pWBB4Install']['wantip']) && !empty($_SESSION['pWBB4Install']['ip']) ) {
+													$config .= 'define(\'_CHECK_REMOTEADDR\', \''.$_SESSION['pWBB4Install']['ip'].'\');'."\r\n";
+												}
+												fwrite($ch, $config);
+												fclose($ch);
 											}
-											if ( isset($_SESSION['pWBB4Install']['wantip']) && !empty($_SESSION['pWBB4Install']['ip']) ){
-												$config .= 'define(\'_CHECK_REMOTEADDR\', \''.$_SESSION['pWBB4Install']['ip'].'\');'."\r\n";
-											}
-											fwrite($h, str_replace('<?php', '<?php'.$config, $get));
+											fwrite($h, $get);
 											echo 'Installation abgeschlossen!<br />#define pWBB4_CONNECT_KEY "'.$_SESSION['pWBB4Install']['key'].'"';
 											$_SESSION['pWBB4Install'] = null;
 											@unlink(dirname(__FILE__).'/install.php');
