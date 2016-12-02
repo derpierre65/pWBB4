@@ -119,7 +119,7 @@
 											$configFile = $_SESSION['pWBB4Install']['dirname'].'samp.inc.php';
 											if ( !file_exists($configFile) ) {
 												$ch = fopen($configFile, 'w+');
-												$config = "<?php";
+												$config = "<?php\r\n";
 												if ( !empty($_SESSION['pWBB4Install']['key']) ) {
 													$config .= 'define(\'_SECURITY_KEY\', \''.$_SESSION['pWBB4Install']['key'].'\');'."\r\n";
 												}
