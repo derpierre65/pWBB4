@@ -15,9 +15,15 @@
 		native WBB_EnableUserID(UserID, playerid = -1, index = 0)
 		native WBB_DisableUsername(Username[], playerid = -1, index = 0)
 		native WBB_DisableUserID(UserID, playerid = -1, index = 0)
-		WBB_AddPost(Username[], BoardID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, playerid = -1, index = 0)
-	    WBB_AddPostUserID(UserID, BoardID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, playerid = -1, index = 0)		
+		
+		native WBB_AddPost(Username[], ThreadID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, isDisabled = 0, isGuest = 0, playerid = -1, index = 0)
+	    native WBB_AddPostUserID(UserID, ThreadID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, isDisabled = 0, isGuest = 0, playerid = -1, index = 0)
+		
+		WBB_AddThread(Username[], BoardID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, isDisabled = 0, isGuest = 0, playerid = -1, index = 0)
+	    WBB_AddThreadUserID(UserID, BoardID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, isDisabled = 0, isGuest = 0, playerid = -1, index = 0)
+		
 		native WBB_GetUserID(Username[], playerid = -1, index = 0)
+		native WBB_IsForbiddenUsername(Username[], playerid = -1, index = 0)
 	
 	php natives:
 		native PHP_Hash(String[], Algo[], playerid = -1, index = 0)
@@ -72,9 +78,10 @@
 #define pWBB4_ACTION_WBBENABLEUSERID		12
 #define pWBB4_ACTION_WBBDISABLEUSERNAME		13
 #define pWBB4_ACTION_WBBDISABLEUSERID		14
-//#define pWBB4_ACTION_WBBADDPOST				15
-//#define pWBB4_ACTION_WBBADDPOSTUSERID		16
+#define pWBB4_ACTION_WBBADDPOST				15
+#define pWBB4_ACTION_WBBADDPOSTUSERID		16
 #define pWBB4_ACTION_WBBGETUSERID           17
+#define pWBB4_ACTION_WBBISFORBIDDENUSERNAME 18
 
 // PHP Functions
 
@@ -152,25 +159,28 @@ stock WBB_DisableUserID(UserID, playerid = -1, index = 0) {
 	format(str,sizeof str, "a=2&b=2&c=%d", UserID);
 	return pWBB4_SendRequest(pWBB4_ACTION_WBBDISABLEUSERID, str, playerid, index);
 }
-/*
-please dont use this
 
-stock WBB_AddPost(Username[], BoardID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, playerid = -1, index = 0) {
+stock WBB_AddPost(Username[], ThreadID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, isDisabled = 0, isGuest = 0, playerid = -1, index = 0) {
 	new str[pWBB_URL_LENGTH];
-	format(str,sizeof str, "a=%s&b=%d&c=%s&d=%s&e=%d&f=%d&g=%d&h=%d&i=1", pWBB4_urlencode(Username), BoardID, pWBB4_urlencode(Subject), pWBB4_urlencode(Message), enableBBCodes, enableHtml, enableSmilies, showSignature);
+	format(str,sizeof str, "a=%s&b=%d&c=%s&d=%s&e=%d&f=%d&g=%d&h=%d&i=1&j=%d&k=%d", pWBB4_urlencode(Username), ThreadID, pWBB4_urlencode(Subject), pWBB4_urlencode(Message), enableBBCodes, enableHtml, enableSmilies, showSignature, isDisabled, isGuest);
 	return pWBB4_SendRequest(pWBB4_ACTION_WBBADDPOST, str, playerid, index);
 }
-stock WBB_AddPostUserID(UserID, BoardID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, playerid = -1, index = 0) {
+stock WBB_AddPostUserID(UserID, ThreadID, Subject[], Message[], enableBBCodes = 1, enableHtml = 0, enableSmilies = 1, showSignature = 1, isDisabled = 0, isGuest = 0, playerid = -1, index = 0) {
 	new str[pWBB_URL_LENGTH];
-	format(str,sizeof str, "a=%d&b=%d&c=%s&d=%s&e=%d&f=%d&g=%d&h=%d&i=2", UserID, BoardID, pWBB4_urlencode(Subject), pWBB4_urlencode(Message), enableBBCodes, enableHtml, enableSmilies, showSignature);
+	format(str,sizeof str, "a=%d&b=%d&c=%s&d=%s&e=%d&f=%d&g=%d&h=%d&i=2&j=%d&k=%d", UserID, ThreadID, pWBB4_urlencode(Subject), pWBB4_urlencode(Message), enableBBCodes, enableHtml, enableSmilies, showSignature, isDisabled, isGuest);
 	return pWBB4_SendRequest(pWBB4_ACTION_WBBADDPOSTUSERID, str, playerid, index);
 }
 
-*/
 stock WBB_GetUserID(Username[], playerid = -1, index = 0) {
 	new str[pWBB_URL_LENGTH];
 	format(str,sizeof str, "a=%s", pWBB4_urlencode(Username));
 	return pWBB4_SendRequest(pWBB4_ACTION_WBBGETUSERID, str, playerid, index);
+}
+
+stock WBB_IsForbiddenUsername(Username[], playerid = -1, index = 0) {
+	new str[pWBB_URL_LENGTH];
+	format(str,sizeof str, "a=%s", pWBB4_urlencode(Username));
+	return pWBB4_SendRequest(pWBB4_ACTION_WBBISFORBIDDENUSERNAME, str, playerid, index);
 }
 
 

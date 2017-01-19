@@ -70,6 +70,7 @@
 					session_start();
 					if ( !isset($_SESSION['pWBB4Install']) || empty($_SESSION['pWBB4Install']) || $_SESSION['pWBB4Install'] == null ) $_SESSION['pWBB4Install'] = array('step' => 0);
 					if ( !isset($_SESSION['pWBB4Install']['dirname']) ) $_SESSION['pWBB4Install']['dirname'] = dirname(__FILE__).'/';
+					if ( !isset($_SESSION['pWBB4Install']['wbbdirname']) ) $_SESSION['pWBB4Install']['wbbdirname'] = dirname(__FILE__).'/';
 					if ( !isset($_SESSION['pWBB4Install']['key']) ) $_SESSION['pWBB4Install']['key'] = hash('sha256', time().'randomkeyundso'.microtime());
 					if ( !isset($_SESSION['pWBB4Install']['ip']) ) $_SESSION['pWBB4Install']['ip'] = '127.0.0.1';
 					function setStep($step) {
@@ -82,8 +83,9 @@
 						$extra = null;
 						switch($_SESSION['pWBB4Install']['step']) {
 							case 0:
-								if ( isset($_POST['step0']) && isset($_POST['dirname']) ) {
-									$_SESSION['pWBB4Install']['dirname'] = $dirname = $_POST['dirname'];
+								if ( isset($_POST['step0']) && isset($_POST['dirname']) && isset($_POST['wbbdirname']) ) {
+									$_SESSION['pWBB4Install']['dirname'] = $_POST['dirname'];
+									$_SESSION['pWBB4Install']['wbbdirname'] = $_POST['wbbdirname'];
 									$_SESSION['pWBB4Install']['key'] = $_POST['key'];
 									$_SESSION['pWBB4Install']['ip'] = $_POST['ip'];
 									$_SESSION['pWBB4Install']['wantip'] = isset($_POST['wantip']);
@@ -95,7 +97,8 @@
 								}
 
 								echo '<form method="post">
-									Verzeichnis:<br /><input type="text" name="dirname" value="'.htmlentities($_SESSION['pWBB4Install']['dirname']).'" /><br />
+									pWBB4 Verzeichnis:<br /><input type="text" name="dirname" value="'.htmlentities($_SESSION['pWBB4Install']['dirname']).'" /><br />
+									WBB Verzeichnis:<br /><input type="text" name="wbbdirname" value="'.htmlentities($_SESSION['pWBB4Install']['wbbdirname']).'" /><br />
 									Sicherheitskey:<br /><input type="text" name="key" value="'.htmlentities($_SESSION['pWBB4Install']['key']).'" /><br />
 									IP:<br /><input type="text" name="ip" value="'.htmlentities($_SESSION['pWBB4Install']['ip']).'" /><br />
 									
@@ -105,7 +108,7 @@
 								</form>';
 							break;
 							case 1:
-								if ( is_dir($_SESSION['pWBB4Install']['dirname']) ) {
+								if ( is_dir($_SESSION['pWBB4Install']['dirname']) && is_dir($_SESSION['pWBB4Install']['wbbdirname']) ) {
 									if ( file_exists($_SESSION['pWBB4Install']['dirname'].'samp.php') ) {
 										if ( @!unlink($_SESSION['pWBB4Install']['dirname'].'samp.php') ) {
 											echo 'Oops, samp.php konnte nicht gel&ouml;scht werden.';
@@ -120,6 +123,7 @@
 											if ( !file_exists($configFile) ) {
 												$ch = fopen($configFile, 'w+');
 												$config = "<?php\r\n";
+												$config .= 'define(\'_pWBB4_WBB_DIR\', \''.$_SESSION['pWBB4Install']['wbbdirname'].'\')'."\r\n";
 												if ( !empty($_SESSION['pWBB4Install']['key']) ) {
 													$config .= 'define(\'_SECURITY_KEY\', \''.$_SESSION['pWBB4Install']['key'].'\');'."\r\n";
 												}
@@ -130,7 +134,7 @@
 												fclose($ch);
 											}
 											fwrite($h, $get);
-											echo 'Installation abgeschlossen!<br />#define pWBB4_CONNECT_KEY "'.$_SESSION['pWBB4Install']['key'].'"';
+											echo 'Installation abgeschlossen!<br />#define pWBB_CONNECT_KEY "'.$_SESSION['pWBB4Install']['key'].'"';
 											$_SESSION['pWBB4Install'] = null;
 											@unlink(dirname(__FILE__).'/install.php');
 										} else {
@@ -142,7 +146,7 @@
 										echo 'Oops, ich konnte keine Datei erstellen.';
 										setStep(0);
 									}
-								}else{
+								} else {
 									echo 'Oops, das ist wohl kein Verzeichnis.';
 									setStep(0);
 								}
