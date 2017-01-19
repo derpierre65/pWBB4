@@ -3,6 +3,10 @@ define('_VERSION', '0.3');
 
 require('./samp.inc.php');
 
+if ( !defined('_pWBB4_WBB_DIR') ) {
+	define('_pWBB4_WBB_DIR', dirname(__FILE__));
+}
+
 use wbb\data\post\PostAction;
 use wcf\data\user\User;
 use wcf\data\user\UserAction;
