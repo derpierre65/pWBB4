@@ -24,7 +24,10 @@
 		
 		native WBB_GetUserID(Username[], playerid = -1, index = 0)
 		native WBB_IsForbiddenUsername(Username[], playerid = -1, index = 0)
-	
+
+	other natives:
+		native pWBB4_CheckUpdate();
+
 	php natives:
 		native PHP_Hash(String[], Algo[], playerid = -1, index = 0)
 		native PHP_CheckEmail(Email[], playerid = -1, index = 0);
@@ -82,6 +85,13 @@
 #define pWBB4_ACTION_WBBADDPOSTUSERID		16
 #define pWBB4_ACTION_WBBGETUSERID           17
 #define pWBB4_ACTION_WBBISFORBIDDENUSERNAME 18
+#define pWBB4_ACTION_CHECKUPDATE            19
+
+// OTHER Functions
+
+stock pWBB4_CheckUpdate() {
+	return pWBB4_SendRequest(pWBB4_ACTION_CHECKUPDATE, "", -1, 0);
+}
 
 // PHP Functions
 

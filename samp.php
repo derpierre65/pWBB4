@@ -1,5 +1,5 @@
 <?php
-define('_VERSION', '0.3');
+define('API_VERSION', '0.4');
 
 require('./samp.inc.php');
 
@@ -7,15 +7,33 @@ if ( !defined('_pWBB4_WBB_DIR') ) {
 	define('_pWBB4_WBB_DIR', dirname(__FILE__));
 }
 
+use wbb\data\board\BoardCache;
 use wbb\data\post\PostAction;
 use wcf\data\user\User;
 use wcf\data\user\UserAction;
 use wcf\data\user\UserRegistrationAction;
+use wcf\system\message\censorship\Censorship;
 use wcf\system\WCF;
 
 // wcf\data\user\infraction\warning\UserInfractionWarningAction  -> warn (user: user object, title, points, expires, reason)
 
-class Core {
+/**
+ * Class SAMPCore
+ *
+ * @author      Pierre Wüst
+ * @property mixed postA
+ * @property mixed postB
+ * @property mixed postC
+ * @property mixed postD
+ * @property mixed postE
+ * @property mixed postF
+ * @property mixed postG
+ * @property mixed postH
+ * @property mixed postI
+ * @property mixed postJ
+ * @property mixed postK
+ */
+class SAMPCore {
 	private $functions = [
 		'phpHash', // PHP_Hash
 		'phpEmail', // PHP_CheckEmail
@@ -34,13 +52,17 @@ class Core {
 		'wbbAddPost', // WBB_AddPost
 		'wbbAddPost', // WBB_AddPostUserID
 		'wbbGetUserID', // WBB_GetUserID
-		'wbbIsForbiddenUsername' // WBB_IsForbiddenUsername
+		'wbbIsForbiddenUsername', // WBB_IsForbiddenUsername
+		'checkUpdates'
 	];
 	private $index = -1;
 	private $action = -1;
 	private $status = -1;
 	private $playerid = -1;
 	private $response = null;
+	/**
+	 * @var \wcf\data\user\User
+	 */
 	private $userObj = null;
 
 	public function __construct() {
@@ -92,6 +114,8 @@ class Core {
 		}
 		$this->status = $errorcode;
 		$this->generateOutput();
+
+		return true;
 	}
 
 	public function generateOutput() {
@@ -117,6 +141,22 @@ class Core {
 		}
 
 		return false;
+	}
+
+	public function checkUpdates() {
+		$version = @file_get_contents('https://raw.githubusercontent.com/derpierre65/pWBB4/master/VERSION', false, stream_context_create([
+			"ssl" => [
+				"verify_peer" => false,
+				"verify_peer_name" => false
+			]
+		]));
+
+		if ( version_compare($version, API_VERSION, '>') ) {
+			$this->setResponse($version);
+			$this->setStatus(1);
+		} else {
+			$this->setStatus(0);
+		}
 	}
 
 	public function isValidEmail($email) {
@@ -307,7 +347,6 @@ class Core {
 		$this->setStatus(1);
 	}
 
-	// TODO
 	public function wbbAddPost() {
 		$this->getPost(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']);
 
@@ -326,6 +365,7 @@ class Core {
 			}
 		}
 
+		$userID = $username = null;
 		if ( $this->userObj->userID < 1 ) {
 			if ( $this->postK == 1 ) {
 				$userID   = null;
@@ -341,20 +381,20 @@ class Core {
 		}
 
 		// exist thread?
-		$this->thread = new \wbb\data\thread\Thread($this->postB);
-		if ( $this->thread === null || !$this->thread->threadID ) {
+		$thread = new \wbb\data\thread\Thread($this->postB);
+		if ( $thread === null || !$thread->threadID ) {
 			$this->setError(-2);
 		}
 
 		// is thread closed, deleted or disabled?
-		if ( $this->thread->isDeleted || $this->thread->isClosed || $this->thread->isDisabled ) {
-			if ( $this->thread->isClosed ) {
+		if ( $thread->isDeleted || $thread->isClosed || $thread->isDisabled ) {
+			if ( $thread->isClosed ) {
 				$this->setResponse(1);
 			}
-			else if ( $this->thread->isDeleted ) {
+			else if ( $thread->isDeleted ) {
 				$this->setResponse(2);
 			}
-			else if ( $this->thread->isDisabled ) {
+			else if ( $thread->isDisabled ) {
 				$this->setResponse(3);
 			}
 
@@ -382,13 +422,13 @@ class Core {
 		WCF::getSession()->changeUser($this->userObj, true);
 
 		// looking for max text length
-		$this->maxTextLength = WCF::getSession()->getPermission('user.board.maxPostLength');
+		$maxTextLength = WCF::getSession()->getPermission('user.board.maxPostLength');
 
 		// delete login session
 		WCF::getSession()->delete();
 
 		// text too long
-		if ( $this->maxTextLength != 0 && mb_strlen($this->postD) > $this->maxTextLength ) {
+		if ( $maxTextLength != 0 && mb_strlen($this->postD) > $maxTextLength ) {
 			$this->setError(-6);
 		}
 
@@ -443,8 +483,8 @@ class Core {
 		}
 
 		// Board is closed or dont exist (-2)
-		$this->board = BoardCache::getInstance()->getBoard($this->postB);
-		if ( $this->board === null || !$this->board->isBoard() || $this->board->isClosed ) {
+		$board = BoardCache::getInstance()->getBoard($this->postB);
+		if ( $board === null || !$board->isBoard() || $board->isClosed ) {
 			$this->setError(-2);
 		}
 
@@ -469,11 +509,11 @@ class Core {
 		if ( empty($this->postD) ) {
 			return $this->setError(-7);
 		}
-		$this->maxTextLength = WCF::getSession()->getPermission('user.board.maxPostLength');
+		$maxTextLength = WCF::getSession()->getPermission('user.board.maxPostLength');
 		// #debug HIER WEITER MACHEN
 
 		// text too long (-8)
-		if ( $this->maxTextLength != 0 && mb_strlen($this->postD) > $this->maxTextLength ) {
+		if ( $maxTextLength != 0 && mb_strlen($this->postD) > $maxTextLength ) {
 			$this->setError(-8);
 		}
 
@@ -517,4 +557,4 @@ class Core {
 	}
 }
 
-$core = new Core();
+$core = new SAMPCore();
