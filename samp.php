@@ -69,8 +69,19 @@ class SAMPCore {
 		if ( defined('_SECURITY_KEY') && (empty($_GET['key']) || $_GET['key'] != _SECURITY_KEY) ) {
 			$this->setError(403);
 		}
-		if ( defined('_CHECK_REMOTEADDR') && $_SERVER['REMOTE_ADDR'] != _CHECK_REMOTEADDR ) {
-			$this->setError(403);
+		if ( defined('_CHECK_REMOTEADDR') ) {
+			$ips = explode(',', _CHECK_REMOTEADDR);
+			$foundIp = false;
+			foreach ( $ips as $key => $ip ) {
+				if ( $ip == $_SERVER['REMOTE_ADDR'] ) {
+					$foundIp = true;
+					break;
+				}
+			}
+
+			if ( !$foundIp ) {
+				$this->setError(403);
+			}
 		}
 		if ( empty($_GET['action']) ) {
 			$this->setError(404);

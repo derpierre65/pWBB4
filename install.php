@@ -122,7 +122,7 @@
 									pWBB4 Verzeichnis:<br /><input type="text" name="dirname" value="'.htmlentities($_SESSION['pWBB4Install']['dirname']).'" /><br />
 									WBB Verzeichnis:<br /><input type="text" name="wbbdirname" value="'.htmlentities($_SESSION['pWBB4Install']['wbbdirname']).'" /><br />
 									Sicherheitskey:<br /><input type="text" name="key" value="'.htmlentities($_SESSION['pWBB4Install']['key']).'" /><br />
-									IP:<br /><input type="text" name="ip" value="'.htmlentities($_SESSION['pWBB4Install']['ip']).'" /><br />
+									IP (Mehrere IPs mit Komma trennen):<br /><input type="text" name="ip" value="'.htmlentities($_SESSION['pWBB4Install']['ip']).'" /><br />
 									
 									<label><input type="checkbox" name="wantip" value="1" /> Zugriff nur &uuml;ber eine IP aktivieren (erh&ouml;ht die Sicherheit)</label><br />
 									'.$extra.'
