@@ -122,11 +122,13 @@
 									pWBB4 Verzeichnis:<br /><input type="text" name="dirname" value="'.htmlentities($_SESSION['pWBB4Install']['dirname']).'" /><br />
 									WBB Verzeichnis:<br /><input type="text" name="wbbdirname" value="'.htmlentities($_SESSION['pWBB4Install']['wbbdirname']).'" /><br />
 									Sicherheitskey:<br /><input type="text" name="key" value="'.htmlentities($_SESSION['pWBB4Install']['key']).'" /><br />
-									IP (Mehrere IPs mit Komma trennen):<br /><input type="text" name="ip" value="'.htmlentities($_SESSION['pWBB4Install']['ip']).'" /><br />
+									* IP (Mehrere IPs mit Komma trennen):<br /><input type="text" name="ip" value="'.htmlentities($_SESSION['pWBB4Install']['ip']).'" /><br />
 									
-									<label><input type="checkbox" name="wantip" value="1" /> Zugriff nur &uuml;ber eine IP aktivieren (erh&ouml;ht die Sicherheit)</label><br />
+									<label><input type="checkbox" name="wantip" value="1" /> Zugriff nur &uuml;ber die IPs aktivieren (erh&ouml;ht die Sicherheit)</label><br />
 									<label><input type="checkbox" name="usewsc" value="1" /> Ich nutze WSC 3.0/3.1 oder WSF 5.0/5.1</label><br />
 									<input type="submit" name="step0" value="Weiter" />
+									<br />
+									* Hier kommen IPs rein die von SAMP verwendet werden, sollte SAMP und WBB auf dem selben Server liegen kann im Regelfall 127.0.0.1 verwendet werden.
 								</form>';
 						break;
 					case 1:
