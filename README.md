@@ -1,8 +1,9 @@
 # pWBB4
 pWBB4 erstellt eine Verbindung von SA:MP zum WBB4 und kann viele Funktionen ausführen.
 
-[Branch für WBB 5 bzw. WSC](https://github.com/derpierre65/pWBB4/tree/wsc)
-[Branch für WBB 4 bzw. WCF](https://github.com/derpierre65/pWBB4/tree/master)
+[WSF 5 bzw. WSC](https://github.com/derpierre65/pWBB4/tree/wsc)
+
+[WBB 4 bzw. WCF](https://github.com/derpierre65/pWBB4/tree/master)
 
 # Neue Funktionen?
 
