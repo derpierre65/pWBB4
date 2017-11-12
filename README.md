@@ -1,10 +1,6 @@
 # pWBB4
 pWBB4 erstellt eine Verbindung von SA:MP zum WBB4 und kann viele Funktionen ausführen.
 
-[WSF 5 bzw. WSC](https://github.com/derpierre65/pWBB4/tree/wsc)
-
-[WBB 4 bzw. WCF](https://github.com/derpierre65/pWBB4/tree/master)
-
 # Neue Funktionen?
 
 Du möchtest eine neue Funktion bei der Include haben?
@@ -22,6 +18,12 @@ Erstelle eine neue Aufgabe und ich werde sie mir anschauen und eventuell in der 
 8. `#define pWBB_CONNECT_KEY "deinkey"` vor dem Include von pWBB4 einfügen.
 9. `#define pWBB_URL "Deine Forum URL"` vor dem Include von pWBB4 einfügen (Beispiele: 'github.com', 'community.woltlab.com' (nur die TLD/IP, ohne www oder http/https).
 10. Installation abgeschlossen
+
+# WSC 3.0/3.1 oder WSF 5.0/5.1
+
+Um pWBB4 für WSC 3.0 bzw. 3.1 oder WSF 5.0 bzw. 5.1 zu verwenden muss in der Installation "Ich nutze WSC 3.0/3.1 oder WSF 5.0/5.1" ausgewählt werden.
+Für vorhandene Installationen ist es empfehlenswert die `install.php` neu auszuführen, diese nutzen die API für WBB 4.0/4.1 bzw. WCF 2.0/2.1.
+Außerdem muss die `pWBB4-WSF.inc` Include für Pawno verwendet werden.
 
 # pWBB4 updaten
 

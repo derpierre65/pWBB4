@@ -101,7 +101,6 @@
 
 			function getStep() {
 				ob_start();
-				$extra = null;
 				switch ( $_SESSION['pWBB4Install']['step'] ) {
 					case 0:
 						if ( isset($_POST['step0']) && isset($_POST['dirname']) && isset($_POST['wbbdirname']) ) {
@@ -110,6 +109,7 @@
 							$_SESSION['pWBB4Install']['key']        = $_POST['key'];
 							$_SESSION['pWBB4Install']['ip']         = $_POST['ip'];
 							$_SESSION['pWBB4Install']['wantip']     = isset($_POST['wantip']);
+							$_SESSION['pWBB4Install']['usewsc']     = isset($_POST['usewsc']);
 							if ( is_dir($_SESSION['pWBB4Install']['dirname']) ) {
 								return setStep(1);
 							}
@@ -125,7 +125,7 @@
 									IP (Mehrere IPs mit Komma trennen):<br /><input type="text" name="ip" value="'.htmlentities($_SESSION['pWBB4Install']['ip']).'" /><br />
 									
 									<label><input type="checkbox" name="wantip" value="1" /> Zugriff nur &uuml;ber eine IP aktivieren (erh&ouml;ht die Sicherheit)</label><br />
-									'.$extra.'
+									<label><input type="checkbox" name="usewsc" value="1" /> Ich nutze WSC 3.0/3.1 oder WSF 5.0/5.1</label><br />
 									<input type="submit" name="step0" value="Weiter" />
 								</form>';
 						break;
@@ -146,13 +146,18 @@
 									if ( !file_exists($configFile) ) {
 										$ch     = fopen($configFile, 'w+');
 										$config = "<?php\r\n";
-										$config .= 'define(\'_pWBB4_WBB_DIR\', \''.$_SESSION['pWBB4Install']['wbbdirname'].'\')'."\r\n";
+										$config .= 'define(\'_pWBB4_WBB_DIR\', \''.$_SESSION['pWBB4Install']['wbbdirname'].'\');'."\r\n";
 										if ( !empty($_SESSION['pWBB4Install']['key']) ) {
 											$config .= 'define(\'_SECURITY_KEY\', \''.$_SESSION['pWBB4Install']['key'].'\');'."\r\n";
 										}
 										if ( isset($_SESSION['pWBB4Install']['wantip']) && !empty($_SESSION['pWBB4Install']['ip']) ) {
 											$config .= 'define(\'_CHECK_REMOTEADDR\', \''.$_SESSION['pWBB4Install']['ip'].'\');'."\r\n";
 										}
+										$wcfVersion = 2;
+										if ( isset($_SESSION['pWBB4Install']['usewsc']) && $_SESSION['pWBB4Install']['usewsc'] ) {
+											$wcfVersion = 3;
+										}
+										$config .= 'define(\'_pWBB4_WCF_VERSION\', '.$wcfVersion.');'."\r\n";
 										fwrite($ch, $config);
 										fclose($ch);
 									}

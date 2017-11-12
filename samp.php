@@ -3,6 +3,10 @@ define('API_VERSION', '0.5');
 
 require('./samp.inc.php');
 
+if ( !defined('_pWBB4_WCF_VERSION') ) {
+	define('_pWBB4_WCF_VERSION', 2); // wcf 2/2.1 - wbb 4/4.1
+}
+
 if ( !defined('_pWBB4_WBB_DIR') ) {
 	define('_pWBB4_WBB_DIR', dirname(__FILE__));
 }
@@ -285,6 +289,9 @@ class SAMPCore {
 				'email'    => $this->postC
 			]
 		]);
+		/**
+		 * @var $user \wcf\data\user\User
+		 */
 		$user   = $action->executeAction()['returnValues'];
 		$this->setStatus(1);
 		$this->setResponse($user->getUserID());
@@ -359,6 +366,17 @@ class SAMPCore {
 	}
 
 	public function wbbAddPost() {
+		$functionName = 'wbbAddPost'._pWBB4_WCF_VERSION;
+
+		$this->{$functionName}();
+	}
+
+	/**
+	 * wbbAddPost function for wcf 2.0/2.1
+	 *
+	 * @return void
+	 */
+	public function wbbAddPost2() {
 		$this->getPost(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']);
 
 		// set response to userID/username if user dont exist
@@ -418,7 +436,7 @@ class SAMPCore {
 
 		// text is empty
 		if ( empty($this->postD) ) {
-			return $this->setError(-4);
+			$this->setError(-4);
 		}
 
 		// found censored words
@@ -477,6 +495,109 @@ class SAMPCore {
 		$this->setStatus(1);
 	}
 
+	/**
+	 * wbbAddPost function for wsc 3.0/3.1
+	 *
+	 * @return void
+	 */
+	public function wbbAddPost3() {
+		$this->getPost(['a', 'b', 'd', 'i', 'j', 'k']);
+		// set response to userID/username if user dont exist
+		$this->setResponse($this->postA);
+		// Get user by name or id?
+		if ( $this->postI == 1 ) {
+			$this->getUserByUsername($this->postA);
+		}
+		else {
+			$this->getUserByUserID($this->postA);
+			if ( $this->userObj->userID < 1 ) {
+				$this->setError(-1);
+			}
+		}
+		$userID = $username = null;
+		if ( $this->userObj->userID < 1 ) {
+			if ( $this->postK == 1 ) {
+				$userID   = null;
+				$username = $this->postA;
+			}
+			else {
+				$this->setError(1);
+			}
+		}
+		else {
+			$userID   = $this->userObj->userID;
+			$username = $this->userObj->username;
+		}
+		// exist thread?
+		$thread = new \wbb\data\thread\Thread($this->postB);
+		if ( $thread === null || !$thread->threadID ) {
+			$this->setError(-2);
+		}
+		// is thread closed, deleted or disabled?
+		if ( $thread->isDeleted || $thread->isClosed || $thread->isDisabled ) {
+			if ( $thread->isClosed ) {
+				$this->setResponse(1);
+			}
+			else if ( $thread->isDeleted ) {
+				$this->setResponse(2);
+			}
+			else if ( $thread->isDisabled ) {
+				$this->setResponse(3);
+			}
+			$this->setError(-3);
+		}
+		// text is empty
+		if ( empty($this->postD) ) {
+			$this->setError(-4);
+		}
+		// found censored words
+		if ( ENABLE_CENSORSHIP ) {
+			$result = Censorship::getInstance()->test($this->postD);
+			if ( $result ) {
+				$this->setError(-5);
+			}
+		}
+		// login in as user
+		WCF::getSession()->changeUser($this->userObj, true);
+		// looking for max text length
+		$maxTextLength = WCF::getSession()->getPermission('user.board.maxPostLength');
+		// delete login session
+		WCF::getSession()->delete();
+		// text too long
+		if ( $maxTextLength != 0 && mb_strlen($this->postD) > $maxTextLength ) {
+			$this->setError(-6);
+		}
+		// text is too short
+		if ( WBB_THREAD_MIN_CHAR_LENGTH && mb_strlen($this->postD) < WBB_THREAD_MIN_CHAR_LENGTH ) {
+			$this->setError(-7);
+		}
+		// min. word count not reached
+		if ( WBB_THREAD_MIN_WORD_COUNT && count(explode(' ', $this->postD)) < WBB_THREAD_MIN_WORD_COUNT ) {
+			$this->setError(-8);
+		}
+		$data = [
+			'threadID'      => $this->postB,
+			'message'       => $this->postD,
+			'time'          => TIME_NOW,
+			'userID'        => $userID,
+			'username'      => $username,
+			'enableTime'    => 0, // TODO: implement
+			'isDisabled'    => $this->postJ == 1 ? 1 : 0
+		];
+		$action = new PostAction([], 'create', [
+			'data' => $data
+		]);
+		$post   = $action->executeAction()['returnValues'];
+		$this->setResponse($post->postID);
+		$this->setStatus(1);
+	}
+
+	/**
+	 * coming soon
+	 * wbbAddThread
+	 *
+	 * @return bool
+	 */
 	public function wbbAddThread() {
 		$this->getPost(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']);
 
