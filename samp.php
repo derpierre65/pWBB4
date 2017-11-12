@@ -343,10 +343,10 @@ class SAMPCore {
 		}
 
 		if ( $this->postA == 1 ) {
-			$this->getUserByUsername($this->postB);
+			$this->getUserByUsername($this->postC);
 		}
 		else {
-			$this->getUserByUserID($this->postB);
+			$this->getUserByUserID($this->postC);
 		}
 		if ( $this->userObj->userID < 1 ) {
 			$this->setError(-1);
