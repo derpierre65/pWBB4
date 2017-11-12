@@ -1,5 +1,5 @@
 <?php
-define('API_VERSION', '0.4');
+define('API_VERSION', '0.5');
 
 require('./samp.inc.php');
 
