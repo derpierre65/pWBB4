@@ -24,6 +24,8 @@
 		
 		native WBB_GetUserID(Username[], playerid = -1, index = 0)
 		native WBB_IsForbiddenUsername(Username[], playerid = -1, index = 0)
+		native WBB_IsBannedUserID(UserID, playerid = -1, index = 0)
+		native WBB_IsBannedUsername(Username[], playerid = -1, index = 0)
 
 	other natives:
 		native pWBB4_CheckUpdate();
@@ -86,6 +88,8 @@
 #define pWBB4_ACTION_WBBGETUSERID           17
 #define pWBB4_ACTION_WBBISFORBIDDENUSERNAME 18
 #define pWBB4_ACTION_CHECKUPDATE            19
+#define pWBB4_ACTION_WBBISBANNED            20
+#define pWBB4_ACTION_WBBADDTHREAD           21
 
 // OTHER Functions
 
@@ -193,6 +197,29 @@ stock WBB_IsForbiddenUsername(Username[], playerid = -1, index = 0) {
 	return pWBB4_SendRequest(pWBB4_ACTION_WBBISFORBIDDENUSERNAME, str, playerid, index);
 }
 
+stock WBB_IsBannedUserID(UserID, playerid = -1, index = 0) {
+	new str[pWBB_URL_LENGTH];
+	format(str,sizeof str, "a=%d&b=0", UserID);
+	return pWBB4_SendRequest(pWBB4_ACTION_WBBISBANNED, str, playerid, index);
+}
+
+stock WBB_IsBannedUsername(Username[], playerid = -1, index = 0) {
+	new str[pWBB_URL_LENGTH];
+	format(str,sizeof str, "a=%s&b=1", pWBB4_urlencode(Username));
+	return pWBB4_SendRequest(pWBB4_ACTION_WBBISBANNED, str, playerid, index);
+}
+
+/*stock WBB_AddThread(Username[], BoardID, Subject[], Message[], isDisabled = 0, isGuest = 0, playerid = -1, index = 0) {
+	new str[pWBB_URL_LENGTH];
+	format(str,sizeof str, "a=1&b=%s&c=%d&d=%s&e=%s&f=%d&g=%d", pWBB4_urlencode(Username), BoardID, pWBB4_urlencode(Subject), pWBB4_urlencode(Message), isDisabled, isGuest);
+	return pWBB4_SendRequest(pWBB4_ACTION_WBBADDTHREAD, str, playerid, index);
+}
+
+stock WBB_AddThreadUserID(UserID, BoardID, Subject[], Message[], isDisabled = 0, isGuest = 0, playerid = -1, index = 0) {
+	new str[pWBB_URL_LENGTH];
+	format(str,sizeof str, "a=0&b=%d&c=%d&d=%s&e=%s&f=%d&g=%d", UserID, BoardID, pWBB4_urlencode(Subject), pWBB4_urlencode(Message), isDisabled, isGuest);
+	return pWBB4_SendRequest(pWBB4_ACTION_WBBADDTHREAD, str, playerid, index);
+}*/
 
 // include functions + callbacks
 
@@ -212,7 +239,7 @@ public pWBB4_Response(action, response, data[]) {
 	#endif
 	if ( response == 200 ) {
 		new index, playerid, status, res[256];
-		if ( !sscanf(data, "ddds", index, playerid, status, res) ) {
+		if ( !sscanf(data, "ddds[256]", index, playerid, status, res) ) {
 			CallRemoteFunction("pWBB4_Callback", "dddds", action, index, playerid, status, res);
 		} else {
 			CallRemoteFunction("pWBB4_Callback", "dddds", action, -1, -1, -1, "null");

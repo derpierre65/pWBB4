@@ -14,9 +14,14 @@ if ( !defined('_pWBB4_WBB_DIR') ) {
 
 use wbb\data\board\BoardCache;
 use wbb\data\post\PostAction;
+use wcf\data\cronjob\Cronjob;
+use wcf\data\trophy\Trophy;
+use wcf\data\user\trophy\UserTrophyAction;
+use wcf\data\user\trophy\UserTrophyList;
 use wcf\data\user\User;
 use wcf\data\user\UserAction;
 use wcf\data\user\UserRegistrationAction;
+use wcf\system\cronjob\UserBanCronjob;
 use wcf\system\message\censorship\Censorship;
 use wcf\system\WCF;
 
@@ -58,7 +63,10 @@ class SAMPCore {
 		'wbbAddPost', // WBB_AddPostUserID
 		'wbbGetUserID', // WBB_GetUserID
 		'wbbIsForbiddenUsername', // WBB_IsForbiddenUsername
-		'checkUpdates'
+		'checkUpdates',
+		'wbbIsBanned', // WBB_IsBannedUserID
+		'wbbIsBanned', // WBB_IsBannedUsername
+		'wbbAddTrophy'
 	];
 	private $index = -1;
 	private $action = -1;
@@ -99,16 +107,24 @@ class SAMPCore {
 		}
 		$this->action = intval($_GET['action']) - 1;
 
-		if ( !isset($this->functions[$this->action]) ) {
+		$functionName = $this->functions[$this->action];
+		if ( !isset($functionName) ) {
 			$this->setError(406);
 		}
-		if ( !method_exists($this, $this->functions[$this->action]) ) {
+		if ( !method_exists($this, $functionName) && !method_exists($this, $functionName._pWBB4_WCF_VERSION) ) {
 			$this->setError(406);
 		}
-		if ( substr($this->functions[$this->action], 0, 3) == 'wbb' ) {
+		if ( substr($functionName, 0, 3) == 'wbb' ) {
 			$this->initWBB();
 		}
-		$this->{$this->functions[$this->action]}();
+
+		if ( method_exists($this, $functionName._pWBB4_WCF_VERSION) ) {
+			$this->{$functionName._pWBB4_WCF_VERSION}();
+		}
+		else {
+			$this->{$functionName}();
+		}
+
 		$this->generateOutput();
 	}
 
@@ -150,11 +166,20 @@ class SAMPCore {
 
 	public function getPost($keys) {
 		foreach ( $keys as $key => $value ) {
-			if ( !isset($_POST[$value]) ) {
+			if ( is_string($key) && is_string($value) ) {
+				if ( !isset($_REQUEST[$key]) ) {
+					$this->setError(400);
+				}
+
+				$this->{$value} = $_REQUEST[$key];
+				continue;
+			}
+
+			if ( !isset($_REQUEST[$value]) ) {
 				$this->setError(400);
 			}
 			$varname          = 'post'.ucfirst($value);
-			$this->{$varname} = $_POST[$value];
+			$this->{$varname} = $_REQUEST[$value];
 		}
 
 		return false;
@@ -415,12 +440,6 @@ class SAMPCore {
 		$this->setStatus(1);
 	}
 
-	public function wbbAddPost() {
-		$functionName = 'wbbAddPost'._pWBB4_WCF_VERSION;
-
-		$this->{$functionName}();
-	}
-
 	/**
 	 * wbbAddPost function for wcf 2.0/2.1
 	 *
@@ -523,23 +542,21 @@ class SAMPCore {
 			$this->setError(-8);
 		}
 
-		$data = [
-			'threadID'      => $this->postB,
-			'subject'       => $this->postC,
-			'message'       => $this->postD,
-			'time'          => TIME_NOW,
-			'userID'        => $userID,
-			'username'      => $username,
-			'enableBBCodes' => $this->postE,
-			'enableHtml'    => $this->postF,
-			'enableSmilies' => $this->postG,
-			'showSignature' => $this->postH,
-			'enableTime'    => 0, // TODO: implement
-			'isDisabled'    => $this->postJ == 1 ? 1 : 0
-		];
-
 		$action = new PostAction([], 'create', [
-			'data' => $data
+			'data' => [
+				'threadID'      => $this->postB,
+				'subject'       => $this->postC,
+				'message'       => $this->postD,
+				'time'          => TIME_NOW,
+				'userID'        => $userID,
+				'username'      => $username,
+				'enableBBCodes' => $this->postE,
+				'enableHtml'    => $this->postF,
+				'enableSmilies' => $this->postG,
+				'showSignature' => $this->postH,
+				'enableTime'    => 0, // TODO: implement
+				'isDisabled'    => $this->postJ == 1 ? 1 : 0
+			]
 		]);
 		$post   = $action->executeAction()['returnValues'];
 
@@ -629,17 +646,17 @@ class SAMPCore {
 		if ( WBB_THREAD_MIN_WORD_COUNT && count(explode(' ', $this->postD)) < WBB_THREAD_MIN_WORD_COUNT ) {
 			$this->setError(-8);
 		}
-		$data   = [
-			'threadID'   => $this->postB,
-			'message'    => $this->postD,
-			'time'       => TIME_NOW,
-			'userID'     => $userID,
-			'username'   => $username,
-			'enableTime' => 0, // TODO: implement
-			'isDisabled' => $this->postJ == 1 ? 1 : 0
-		];
+
 		$action = new PostAction([], 'create', [
-			'data' => $data
+			'data' => [
+				'threadID'   => $this->postB,
+				'message'    => $this->postD,
+				'time'       => TIME_NOW,
+				'userID'     => $userID,
+				'username'   => $username,
+				'enableTime' => 0, // TODO: implement
+				'isDisabled' => $this->postJ == 1 ? 1 : 0
+			]
 		]);
 		$post   = $action->executeAction()['returnValues'];
 		$this->setResponse($post->postID);
@@ -654,7 +671,7 @@ class SAMPCore {
 	 *
 	 * @return bool
 	 */
-	public function wbbAddThread() {
+	public function wbbAddThread2() {
 		$this->getPost(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']);
 
 		// Get user by name or id?
@@ -740,6 +757,116 @@ class SAMPCore {
 		}
 		else {
 			$this->setStatus(0);
+		}
+	}
+
+	public function wbbIsBanned() {
+		// b: 0 = userid | 1 = username
+		$this->getPost(['a', 'b']);
+
+		if ( class_exists(UserBanCronjob::class) ) {
+			$cronjob = new UserBanCronjob();
+			$cronjob->execute(new Cronjob(null));
+		}
+
+		if ( $this->postB == 1 ) {
+			$this->getUserByUsername($this->postA);
+		}
+		else {
+			$this->getUserByUserID($this->postA);
+		}
+
+		if ( $this->userObj->userID < 1 ) {
+			$this->setResponse($this->postA);
+			$this->setError(-1);
+		}
+
+		if ( $this->userObj->banned ) {
+			$this->setResponse($this->userObj->banReason);
+			$this->setStatus(1);
+		}
+		else {
+			$this->setStatus(0);
+		}
+	}
+
+	/**
+	 * @param $variable
+	 *
+	 * @return mixed
+	 */
+	public function get($variable) {
+		return $this->{$variable};
+	}
+
+	/**
+	 * coming soon
+	 *
+	 * @throws \wcf\system\exception\SystemException
+	 *
+	 * -1: invalid userID or username
+	 * -2: invalid trophyID
+	 * -3: trophy can only added/deleted automatically
+	 */
+	public function wbbAddTrophy() {
+		$_REQUEST['a'] = '1';
+		$_REQUEST['b'] = 'hallo123';
+		$_REQUEST['c'] = '1';
+		$_REQUEST['d'] = '1';
+
+		$this->getPost([
+			'a' => 'isUsername',
+			'b' => 'usernameUserID',
+			'c' => 'isAddTrophy',
+			'd' => 'trophyID'
+		]);
+
+		if ( !$this->get('isAddTrophy') ) {
+			$this->getPost([
+				'e' => 'deleteAll'
+			]);
+		}
+
+		if ( $this->get('isUsername') ) {
+			$this->getUserByUsername($this->get('usernameUserID'));
+		}
+		else {
+			$this->getUserByUserID($this->get('usernameUserID'));
+		}
+
+		// -1: invalid userID/username
+		if ( $this->userObj->userID < 1 ) {
+			$this->setResponse($this->get('usernameUserID'));
+			$this->setError(-1);
+		}
+
+		$trophy = new Trophy($this->get('trophyID'));
+		if ( $trophy->trophyID < 1 ) {
+			$this->setError(-2);
+		}
+
+		if ( $trophy->awardAutomatically ) {
+			$this->setError(-3);
+		}
+
+		if ( $this->get('isAddTrophy') ) {
+			(new UserTrophyAction([], 'create', [
+				'data' => [
+					'trophyID'             => $trophy->trophyID,
+					'userID'               => $this->userObj->userID,
+					'description'          => '',
+					'time'                 => TIME_NOW,
+					'useCustomDescription' => 0
+				]
+			]))->executeAction();
+
+			$this->setResponse('ok');
+			$this->setStatus(1);
+		}
+		else {
+			$userTrophies = new UserTrophyList();
+
+
 		}
 	}
 }
