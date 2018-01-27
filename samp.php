@@ -1,6 +1,7 @@
 <?php
-define('API_VERSION', '0.5');
+define('API_VERSION', '0.5.1');
 
+/** @noinspection PhpIncludeInspection */
 require('./samp.inc.php');
 
 if ( !defined('_pWBB4_WCF_VERSION') ) {
@@ -74,7 +75,7 @@ class SAMPCore {
 			$this->setError(403);
 		}
 		if ( defined('_CHECK_REMOTEADDR') ) {
-			$ips = explode(',', _CHECK_REMOTEADDR);
+			$ips     = explode(',', _CHECK_REMOTEADDR);
 			$foundIp = false;
 			foreach ( $ips as $key => $ip ) {
 				if ( $ip == $_SERVER['REMOTE_ADDR'] ) {
@@ -112,6 +113,7 @@ class SAMPCore {
 	}
 
 	public function initWBB() {
+		/** @noinspection PhpIncludeInspection */
 		require_once(_pWBB4_WBB_DIR.'/global.php');
 	}
 
@@ -161,7 +163,7 @@ class SAMPCore {
 	public function checkUpdates() {
 		$version = @file_get_contents('https://raw.githubusercontent.com/derpierre65/pWBB4/master/VERSION', false, stream_context_create([
 			"ssl" => [
-				"verify_peer" => false,
+				"verify_peer"      => false,
 				"verify_peer_name" => false
 			]
 		]));
@@ -169,7 +171,8 @@ class SAMPCore {
 		if ( version_compare($version, API_VERSION, '>') ) {
 			$this->setResponse($version);
 			$this->setStatus(1);
-		} else {
+		}
+		else {
 			$this->setStatus(0);
 		}
 	}
@@ -217,32 +220,67 @@ class SAMPCore {
 	}
 
 	/* wbb functions */
+
+	/**
+	 * @throws \wcf\system\exception\SystemException
+	 */
 	public function wbbRemoveFromGroups() {
 		$this->getPost(['a', 'b']);
-		$action = new UserAction([$this->postA], 'removeFromGroups', [
-			'groups'           => explode(',', $this->postB),
+		if ( !$this->getUserByUserID($this->postA) ) {
+			$this->setError(-1);
+		}
+
+		$groupIDs       = explode(',', $this->postB);
+		$removeGroupIDs = [];
+		foreach ( $groupIDs as $groupID ) {
+			if ( in_array($groupID, $this->userObj->getGroupIDs()) ) {
+				$removeGroupIDs[] = $groupID;
+			}
+		}
+
+		if ( empty($removeGroupIDs) ) {
+			$this->setError(-2);
+		}
+
+		$action = new UserAction([$this->userObj], 'removeFromGroups', [
+			'groups'           => $removeGroupIDs,
 			'addDefaultGroups' => false,
 			'deleteOldGroups'  => false
 		]);
 		if ( !$action->executeAction() ) {
-			$this->setError(-1);
+			$this->setError(-3);
 		}
 		$this->setStatus(1);
 	}
 
+	/**
+	 * @throws \wcf\system\exception\SystemException
+	 */
 	public function wbbAddToGroups() {
 		$this->getPost(['a', 'b']);
 		if ( !$this->getUserByUserID($this->postA) ) {
 			$this->setError(-1);
 		}
 
-		$action = new UserAction([$this->postA], 'addToGroups', [
-			'groups'           => explode(',', $this->postB),
+		$groupIDs    = explode(',', $this->postB);
+		$addGroupIDs = [];
+		foreach ( $groupIDs as $groupID ) {
+			if ( !in_array($groupID, $this->userObj->getGroupIDs()) ) {
+				$addGroupIDs[] = $groupID;
+			}
+		}
+
+		if ( empty($addGroupIDs) ) {
+			$this->setError(-2);
+		}
+
+		$action = new UserAction([$this->userObj], 'addToGroups', [
+			'groups'           => $addGroupIDs,
 			'addDefaultGroups' => false,
 			'deleteOldGroups'  => false
 		]);
 		if ( !$action->executeAction() ) {
-			$this->setError(-1);
+			$this->setError(-3);
 		}
 		$this->setStatus(1);
 	}
@@ -258,6 +296,9 @@ class SAMPCore {
 		$this->setStatus(1);
 	}
 
+	/**
+	 * @throws \wcf\system\exception\SystemException
+	 */
 	public function wbbAddUser() {
 		$this->getPost(['a', 'b', 'c']);
 
@@ -292,11 +333,14 @@ class SAMPCore {
 		/**
 		 * @var $user \wcf\data\user\User
 		 */
-		$user   = $action->executeAction()['returnValues'];
+		$user = $action->executeAction()['returnValues'];
 		$this->setStatus(1);
 		$this->setResponse($user->getUserID());
 	}
 
+	/**
+	 * @throws \wcf\system\exception\SystemException
+	 */
 	public function wbbBanUser() {
 		$this->getPost(['a', 'b', 'c', 'd']);
 		if ( $this->postA == 1 ) {
@@ -324,6 +368,9 @@ class SAMPCore {
 		$this->setStatus(1);
 	}
 
+	/**
+	 * @throws \wcf\system\exception\SystemException
+	 */
 	public function wbbUnbanUser() {
 		$this->getPost(['a', 'b']);
 		if ( $this->postA == 1 ) {
@@ -342,6 +389,9 @@ class SAMPCore {
 		$this->setStatus(1);
 	}
 
+	/**
+	 * @throws \wcf\system\exception\SystemException
+	 */
 	public function wbbDisableEnableUser() {
 		$this->getPost(['a', 'b', 'c']);
 		$action = 'enable';
@@ -373,6 +423,8 @@ class SAMPCore {
 
 	/**
 	 * wbbAddPost function for wcf 2.0/2.1
+	 *
+	 * @throws \wcf\system\exception\SystemException
 	 *
 	 * @return void
 	 */
@@ -498,6 +550,8 @@ class SAMPCore {
 	/**
 	 * wbbAddPost function for wsc 3.0/3.1
 	 *
+	 * @throws \wcf\system\exception\SystemException
+	 *
 	 * @return void
 	 */
 	public function wbbAddPost3() {
@@ -575,14 +629,14 @@ class SAMPCore {
 		if ( WBB_THREAD_MIN_WORD_COUNT && count(explode(' ', $this->postD)) < WBB_THREAD_MIN_WORD_COUNT ) {
 			$this->setError(-8);
 		}
-		$data = [
-			'threadID'      => $this->postB,
-			'message'       => $this->postD,
-			'time'          => TIME_NOW,
-			'userID'        => $userID,
-			'username'      => $username,
-			'enableTime'    => 0, // TODO: implement
-			'isDisabled'    => $this->postJ == 1 ? 1 : 0
+		$data   = [
+			'threadID'   => $this->postB,
+			'message'    => $this->postD,
+			'time'       => TIME_NOW,
+			'userID'     => $userID,
+			'username'   => $username,
+			'enableTime' => 0, // TODO: implement
+			'isDisabled' => $this->postJ == 1 ? 1 : 0
 		];
 		$action = new PostAction([], 'create', [
 			'data' => $data
@@ -595,6 +649,8 @@ class SAMPCore {
 	/**
 	 * coming soon
 	 * wbbAddThread
+	 *
+	 * @throws \wcf\system\exception\SystemException
 	 *
 	 * @return bool
 	 */
@@ -664,7 +720,6 @@ class SAMPCore {
 			'languageID' => $this->userObj->getLanguage(),
 			//'topic' => $this->
 		];
-
 	}
 
 	public function wbbGetUserID() {
