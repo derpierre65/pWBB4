@@ -1,0 +1,28 @@
+{
+  "name": "ragemp-wsc",
+  "version": "0.7.0",
+  "description": "node javascript api for pWBB4",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/derpierre65/pWBB4.git"
+  },
+  "keywords": [
+    "ragemp",
+    "wbb",
+    "wsc",
+    "woltlab"
+  ],
+  "author": "derpierre65",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/derpierre65/pWBB4/issues"
+  },
+  "homepage": "https://github.com/derpierre65/pWBB4#readme",
+  "dependencies": {
+    "axios": "^0.19.0"
+  }
+}

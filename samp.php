@@ -68,11 +68,19 @@ class SAMPCore {
 		'wbbIsBanned', // WBB_IsBannedUsername
 		'wbbAddTrophy'
 	];
+
 	private $index = -1;
+
 	private $action = -1;
+
 	private $status = -1;
+
 	private $playerid = -1;
+
+	private $responseType = null;
+
 	private $response = null;
+
 	/**
 	 * @var \wcf\data\user\User
 	 */
@@ -83,7 +91,7 @@ class SAMPCore {
 			$this->setError(403);
 		}
 		if ( defined('_CHECK_REMOTEADDR') ) {
-			$ips     = explode(',', _CHECK_REMOTEADDR);
+			$ips = explode(',', _CHECK_REMOTEADDR);
 			$foundIp = false;
 			foreach ( $ips as $key => $ip ) {
 				if ( $ip == $_SERVER['REMOTE_ADDR'] ) {
@@ -96,7 +104,7 @@ class SAMPCore {
 				$this->setError(403);
 			}
 		}
-		if ( empty($_GET['action']) ) {
+		if ( empty($_REQUEST['action']) ) {
 			$this->setError(404);
 		}
 		if ( isset($_GET['playerid']) ) {
@@ -106,6 +114,9 @@ class SAMPCore {
 			$this->index = intval($_GET['index']);
 		}
 		$this->action = intval($_GET['action']) - 1;
+		if ( isset($_REQUEST['responseType']) ) {
+			$this->responseType = $_REQUEST['responseType'];
+		}
 
 		$functionName = $this->functions[$this->action];
 		if ( !isset($functionName) ) {
@@ -141,17 +152,29 @@ class SAMPCore {
 		$this->status = $status;
 	}
 
-	public function setError($errorcode, $res = null) {
-		if ( $res ) {
+	public function setError($errorCode, $res = null) {
+		if ( $res !== null ) {
 			$this->setResponse($res);
 		}
-		$this->status = $errorcode;
+
+		$this->status = $errorCode;
 		$this->generateOutput();
 
 		return true;
 	}
 
 	public function generateOutput() {
+		if ( $this->responseType === 'json' ) {
+			header('Content-Type: application/json');
+
+			die(json_encode([
+				'index'    => $this->index,
+				'playerid' => $this->playerid,
+				'status'   => $this->status,
+				'response' => $this->response
+			]));
+		}
+
 		if ( $this->response === null ) {
 			$this->response = 'null';
 		}
@@ -178,8 +201,8 @@ class SAMPCore {
 			if ( !isset($_REQUEST[$value]) ) {
 				$this->setError(400);
 			}
-			$varname          = 'post'.ucfirst($value);
-			$this->{$varname} = $_REQUEST[$value];
+			$varName = 'post'.ucfirst($value);
+			$this->{$varName} = $_REQUEST[$value];
 		}
 
 		return false;
@@ -255,7 +278,7 @@ class SAMPCore {
 			$this->setError(-1);
 		}
 
-		$groupIDs       = explode(',', $this->postB);
+		$groupIDs = explode(',', $this->postB);
 		$removeGroupIDs = [];
 		foreach ( $groupIDs as $groupID ) {
 			if ( in_array($groupID, $this->userObj->getGroupIDs()) ) {
@@ -287,7 +310,7 @@ class SAMPCore {
 			$this->setError(-1);
 		}
 
-		$groupIDs    = explode(',', $this->postB);
+		$groupIDs = explode(',', $this->postB);
 		$addGroupIDs = [];
 		foreach ( $groupIDs as $groupID ) {
 			if ( !in_array($groupID, $this->userObj->getGroupIDs()) ) {
@@ -443,9 +466,9 @@ class SAMPCore {
 	/**
 	 * wbbAddPost function for wcf 2.0/2.1
 	 *
+	 * @return void
 	 * @throws \wcf\system\exception\SystemException
 	 *
-	 * @return void
 	 */
 	public function wbbAddPost2() {
 		$this->getPost(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']);
@@ -468,7 +491,7 @@ class SAMPCore {
 		$userID = $username = null;
 		if ( $this->userObj->userID < 1 ) {
 			if ( $this->postK == 1 ) {
-				$userID   = null;
+				$userID = null;
 				$username = $this->postA;
 			}
 			else {
@@ -476,7 +499,7 @@ class SAMPCore {
 			}
 		}
 		else {
-			$userID   = $this->userObj->userID;
+			$userID = $this->userObj->userID;
 			$username = $this->userObj->username;
 		}
 
@@ -491,10 +514,10 @@ class SAMPCore {
 			if ( $thread->isClosed ) {
 				$this->setResponse(1);
 			}
-			else if ( $thread->isDeleted ) {
+			elseif ( $thread->isDeleted ) {
 				$this->setResponse(2);
 			}
-			else if ( $thread->isDisabled ) {
+			elseif ( $thread->isDisabled ) {
 				$this->setResponse(3);
 			}
 
@@ -558,7 +581,7 @@ class SAMPCore {
 				'isDisabled'    => $this->postJ == 1 ? 1 : 0
 			]
 		]);
-		$post   = $action->executeAction()['returnValues'];
+		$post = $action->executeAction()['returnValues'];
 
 		$this->setResponse($post->postID);
 		$this->setStatus(1);
@@ -567,9 +590,9 @@ class SAMPCore {
 	/**
 	 * wbbAddPost function for wsc 3.0/3.1
 	 *
+	 * @return void
 	 * @throws \wcf\system\exception\SystemException
 	 *
-	 * @return void
 	 */
 	public function wbbAddPost3() {
 		$this->getPost(['a', 'b', 'd', 'i', 'j', 'k']);
@@ -588,7 +611,7 @@ class SAMPCore {
 		$userID = $username = null;
 		if ( $this->userObj->userID < 1 ) {
 			if ( $this->postK == 1 ) {
-				$userID   = null;
+				$userID = null;
 				$username = $this->postA;
 			}
 			else {
@@ -596,7 +619,7 @@ class SAMPCore {
 			}
 		}
 		else {
-			$userID   = $this->userObj->userID;
+			$userID = $this->userObj->userID;
 			$username = $this->userObj->username;
 		}
 		// exist thread?
@@ -609,10 +632,10 @@ class SAMPCore {
 			if ( $thread->isClosed ) {
 				$this->setResponse(1);
 			}
-			else if ( $thread->isDeleted ) {
+			elseif ( $thread->isDeleted ) {
 				$this->setResponse(2);
 			}
-			else if ( $thread->isDisabled ) {
+			elseif ( $thread->isDisabled ) {
 				$this->setResponse(3);
 			}
 			$this->setError(-3);
@@ -658,7 +681,7 @@ class SAMPCore {
 				'isDisabled' => $this->postJ == 1 ? 1 : 0
 			]
 		]);
-		$post   = $action->executeAction()['returnValues'];
+		$post = $action->executeAction()['returnValues'];
 		$this->setResponse($post->postID);
 		$this->setStatus(1);
 	}
@@ -667,9 +690,9 @@ class SAMPCore {
 	 * coming soon
 	 * wbbAddThread
 	 *
+	 * @return bool
 	 * @throws \wcf\system\exception\SystemException
 	 *
-	 * @return bool
 	 */
 	public function wbbAddThread2() {
 		$this->getPost(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']);
@@ -865,8 +888,6 @@ class SAMPCore {
 		}
 		else {
 			$userTrophies = new UserTrophyList();
-
-
 		}
 	}
 }
